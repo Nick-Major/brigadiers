@@ -1,0 +1,20 @@
+{
+  "name": "brigadiers",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "license": "MIT",
+  "workspaces":[
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace backend dev\" \"yarn workspace frontend dev\"",
+    "build": "yarn workspace frontend build",
+    "start": "yarn workspace backend start",
+    "install:all": "yarn install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
