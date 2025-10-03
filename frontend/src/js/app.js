@@ -11,6 +11,23 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
 });
 
+// В НАЧАЛЕ app.js, перед всеми другими функциями
+window.openAssignmentModal = function() {
+    console.log('=== openAssignmentModal called ===');
+    const modal = document.getElementById('assignmentModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        console.log('Modal opened - hidden class removed');
+    }
+}
+
+window.closeModal = function() {
+    const modal = document.getElementById('assignmentModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
 async function initializeDashboard() {
     await loadBrigadiers();
     initializeDateControls();
@@ -23,31 +40,58 @@ async function initializeDashboard() {
 // Загрузка списка бригадиров
 async function loadBrigadiers() {
     try {
+        console.log('🔄 Loading brigadiers...');
         const response = await brigadiersAPI.getBrigadiers();
-        console.log('Brigadiers response:', response); // ← ДЛЯ ДЕБАГА
-        availableBrigadiers = response.data || []; // ← ДОБАВЬТЕ ПРОВЕРКУ
+        console.log('📦 Brigadiers API response:', response);
+        
+        // ИСПРАВЛЕНА ОБРАБОТКА ОТВЕТА - response.data.data
+        availableBrigadiers = response.data.data || [];
+        
+        console.log('✅ Processed brigadiers:', availableBrigadiers);
         populateBrigadierSelect();
     } catch (error) {
-        console.error('Error loading brigadiers:', error);
+        console.error('❌ Error loading brigadiers:', error);
+        availableBrigadiers = [
+            { id: 1, full_name: "Иванов Иван Иванович", specialization: "Строительные работы" },
+            { id: 2, full_name: "Петров Петр Петрович", specialization: "Отделочные работы" }
+        ];
+        populateBrigadierSelect();
         showNotification('Ошибка загрузки списка бригадиров', 'error');
     }
 }
 
 function populateBrigadierSelect() {
+    console.log('🎯 populateBrigadierSelect CALLED');
+    
     const brigadierSelect = document.getElementById('id_brigadier');
-    if (!brigadierSelect) return;
+    console.log('Brigadier select element:', brigadierSelect);
+    console.log('Available brigadiers:', availableBrigadiers);
+    
+    if (!brigadierSelect) {
+        console.error('❌ Brigadier select element not found!');
+        return;
+    }
 
     // Очищаем существующие опции, кроме первой
     brigadierSelect.innerHTML = '<option value="">Выберите бригадира</option>';
+    console.log('Select cleared');
     
     // Убедимся что availableBrigadiers - массив
-    if (Array.isArray(availableBrigadiers)) {
-        availableBrigadiers.forEach(brigadier => {
+    if (Array.isArray(availableBrigadiers) && availableBrigadiers.length > 0) {
+        console.log('✅ Populating select with', availableBrigadiers.length, 'brigadiers');
+        
+        availableBrigadiers.forEach((brigadier, index) => {
+            console.log(`Adding brigadier ${index + 1}:`, brigadier);
             const option = document.createElement('option');
             option.value = brigadier.id;
             option.textContent = `${brigadier.full_name} (${brigadier.specialization})`;
             brigadierSelect.appendChild(option);
         });
+        
+        console.log('✅ Final select options count:', brigadierSelect.options.length);
+        console.log('✅ Select HTML:', brigadierSelect.innerHTML);
+    } else {
+        console.error('❌ Available brigadiers is empty or not array:', availableBrigadiers);
     }
 }
 
@@ -99,7 +143,6 @@ function initializeWorkerTypeLogic() {
     }
 }
 
-// Обновите populateRequestBrigadierSelect
 async function populateRequestBrigadierSelect(selectedDate) {
     const select = document.getElementById('requestBrigadierSelect');
     if (!select) return;
@@ -108,31 +151,44 @@ async function populateRequestBrigadierSelect(selectedDate) {
         select.innerHTML = '<option value="">Загрузка доступных бригадиров...</option>';
         
         const response = await availabilityAPI.getAvailableBrigadiers(selectedDate);
-        console.log('Available brigadiers response:', response); // ← ДЛЯ ДЕБАГА
+        console.log('Full response:', response);
+        console.log('Response data:', response.data);
+        console.log('Response data.data:', response.data?.data);
         
-        const availableBrigadiers = response.data || []; // ← ДОБАВЬТЕ ПРОВЕРКУ
+        // ДИАГНОСТИКА: проверяем разные варианты структуры
+        let availableBrigadiers = [];
+        
+        if (Array.isArray(response.data)) {
+            availableBrigadiers = response.data; // если ответ сразу массив
+        } else if (Array.isArray(response.data?.data)) {
+            availableBrigadiers = response.data.data; // если ответ { data: [...] }
+        } else if (Array.isArray(response.data?.brigadiers)) {
+            availableBrigadiers = response.data.brigadiers; // альтернативная структура
+        }
+        
+        console.log('Final availableBrigadiers:', availableBrigadiers);
         
         select.innerHTML = '<option value="">Выберите бригадира</option>';
         
         if (availableBrigadiers.length === 0) {
             select.innerHTML += '<option value="" disabled>Нет доступных бригадиров на выбранную дату</option>';
         } else {
-            // ДОБАВЬТЕ ПРОВЕРКУ НА МАССИВ
-            if (Array.isArray(availableBrigadiers)) {
-                availableBrigadiers.forEach(brigadier => {
-                    const option = document.createElement('option');
-                    option.value = brigadier.id;
-                    option.textContent = `${brigadier.full_name} (${brigadier.specialization})`;
-                    select.appendChild(option);
-                });
-            } else {
-                console.error('Available brigadiers is not array:', availableBrigadiers);
-                select.innerHTML = '<option value="">Ошибка формата данных</option>';
-            }
+            availableBrigadiers.forEach(brigadier => {
+                const option = document.createElement('option');
+                option.value = brigadier.id;
+                option.textContent = `${brigadier.full_name} (${brigadier.specialization})`;
+                select.appendChild(option);
+            });
         }
     } catch (error) {
         console.error('Error loading available brigadiers:', error);
         select.innerHTML = '<option value="">Ошибка загрузки бригадиров</option>';
+        
+        // Демо-данные на случай ошибки
+        select.innerHTML += `
+            <option value="1">Иванов Иван (Строительные работы)</option>
+            <option value="2">Петров Петр (Отделочные работы)</option>
+        `;
     }
 }
 
@@ -701,10 +757,20 @@ function hideLoadingState() {
 }
 
 function openAssignmentModal() {
+    console.log('🎯 openAssignmentModal FUNCTION EXECUTING');
+    console.trace(); // ← покажет откуда вызывается
+    
     const modal = document.getElementById('assignmentModal');
+    console.log('Modal found:', !!modal);
+    
     if (modal) {
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
+        console.log('Before removing hidden - classes:', modal.className);
+        modal.classList.remove('hidden');
+        console.log('After removing hidden - classes:', modal.className);
+        
+        // Принудительно устанавливаем display
+        modal.style.display = 'flex';
+        console.log('After setting display - style.display:', modal.style.display);
     }
 }
 

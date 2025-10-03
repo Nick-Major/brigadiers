@@ -7,19 +7,19 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.[contenthash].js',
-    clean: true
+    clean: true,
+    publicPath: '/'
   },
   devServer: {
     static: {
       directory: path.join(__dirname, 'dist'),
-      publicPath: '/',
     },
     compress: true,
     port: 3000,
     hot: true,
     open: true,
     historyApiFallback: true,
-    proxy: [
+    proxy: [  // ← ИСПРАВЛЕНО: массив объектов
       {
         context: ['/api'],
         target: 'http://localhost:5000',
@@ -40,7 +40,8 @@ module.exports = {
         test: /\.css$/,
         use: [
           'style-loader',
-          'css-loader'
+          'css-loader',
+          'postcss-loader'
         ]
       }
     ]
@@ -53,7 +54,11 @@ module.exports = {
     }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: 'src/css', to: 'css' }
+        { 
+          from: 'src/css', 
+          to: 'css',
+          noErrorOnMissing: true
+        }
       ]
     })
   ]

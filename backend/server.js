@@ -3,9 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import assignmentsRouter from './routes/assignments.js';
-import brigadiersRouter from './routes/brigadiers.js';
-import availabilityRouter from './routes/availability.js'; // ← ДОБАВИТЬ ЭТУ СТРОЧКУ
+import assignmentsRouter from './src/routes/assignments.js';
+import brigadiersRouter from './src/routes/brigadiers.js';
+import availabilityRouter from './src/routes/availability.js'; // ← ДОБАВИТЬ ЭТУ СТРОЧКУ
 
 const app = express();
 const PORT = process.env.PORT || 5000;

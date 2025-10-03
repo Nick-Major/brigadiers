@@ -9,6 +9,15 @@ const api = axios.create({
     }
 });
 
+// Добавляем обработчик ошибок
+api.interceptors.response.use(
+    response => response,
+    error => {
+        console.error('API Error:', error.response?.data || error.message);
+        return Promise.reject(error);
+    }
+);
+
 export const assignmentsAPI = {
     getAssignments: (dateRange) => 
         api.get(`/assignments?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`),
