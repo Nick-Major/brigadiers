@@ -5,87 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Система управления персоналом</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="./css/style.css">
+    <style>
+      /* ТОЛЬКО необходимые кастомные классы */
+      .hidden { 
+        display: none !important; 
+      }
+      
+      /* Анимации для модальных окон */
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-50px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .modal-animation {
+        animation: modalSlideIn 0.3s ease;
+      }
+    </style>
   </head>
-  <body class="bg-gray-100">
-    <div class="dashboard-container">
-      <div class="dashboard-header">
+  <body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <!-- Header -->
+      <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Система управления персоналом</h1>
         <p class="text-gray-600 mb-6">Планирование бригадиров и оформление заявок</p>
         
         <!-- Навигация по вкладкам -->
-        <div class="mb-6">
-            <div class="flex space-x-1 bg-gray-200 rounded-xl p-1">
-                <button id="tabBrigadiers" class="tab-btn bg-blue-500 text-white rounded-lg py-2 px-4 text-sm font-medium transition-colors">
-                    Бригадиры
-                </button>
-                <button id="tabRequests" class="tab-btn text-gray-700 hover:bg-gray-300 rounded-lg py-2 px-4 text-sm font-medium transition-colors">
-                    Заявки
-                </button>
-            </div>
+        <div class="mb-2">
+          <div class="flex space-x-1 bg-gray-200 rounded-xl p-1 w-fit">
+            <button id="tabBrigadiers" class="bg-blue-500 text-white rounded-lg py-2 px-4 text-sm font-medium transition-colors">
+              Бригадиры
+            </button>
+            <button id="tabRequests" class="text-gray-700 hover:bg-gray-300 rounded-lg py-2 px-4 text-sm font-medium transition-colors">
+              Заявки
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- ВКЛАДКА БРИГАДИРОВ -->
       <div id="brigadiersTab">
-        <div class="control-panel">
-          <div class="view-controls">
-            <div class="view-type-group">
-              <label class="text-sm font-medium mb-1">Тип просмотра</label>
-              <select id="viewType" class="form-control">
-                <option value="single">Одна дата</option>
-                <option value="range">Период</option>
-              </select>
-            </div>
+        <!-- Control Panel -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+          <div class="flex flex-wrap items-end gap-6">
+            <div class="flex flex-wrap gap-6">
+              <!-- View Type -->
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-gray-700">Тип просмотра</label>
+                <select id="viewType" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="single">Одна дата</option>
+                  <option value="range">Период</option>
+                </select>
+              </div>
 
-            <div id="singleDateGroup" class="date-group">
-              <label class="text-sm font-medium mb-1">Дата</label>
-              <input type="date" id="datePicker" class="form-control" />
-            </div>
+              <!-- Single Date -->
+              <div id="singleDateGroup" class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-gray-700">Дата</label>
+                <input type="date" id="datePicker" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
 
-            <div id="dateRangeGroup" class="date-group" style="display: none">
-              <label class="text-sm font-medium mb-1">Период</label>
-              <div class="flex gap-2 items-center">
-                <input type="date" id="startDatePicker" class="form-control" />
-                <span>—</span>
-                <input type="date" id="endDatePicker" class="form-control" />
+              <!-- Date Range -->
+              <div id="dateRangeGroup" class="hidden flex-col gap-2">
+                <label class="text-sm font-medium text-gray-700">Период</label>
+                <div class="flex items-center gap-2">
+                  <input type="date" id="startDatePicker" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <span class="text-gray-500">—</span>
+                  <input type="date" id="endDatePicker" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
               </div>
             </div>
-          </div>
 
-          <button onclick="openAssignmentModal()" class="btn btn-primary">
-            Назначить бригадира
-          </button>
+            <button onclick="openAssignmentModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+              Назначить бригадира
+            </button>
+          </div>
         </div>
 
-        <div id="dashboardSummary" class="dashboard-summary">
+        <!-- Summary -->
+        <div id="dashboardSummary" class="grid grid-cols-4 gap-6 mb-6">
           <!-- Сводка будет заполнена JavaScript -->
         </div>
 
-        <table class="assignments-table">
-          <thead>
-            <tr>
-              <th>ФИО Бригадира</th>
-              <th>Специализация</th>
-              <th>Статус</th>
-              <th>Рабочие дни</th>
-              <th>Инициаторы</th>
-              <th>Назначения</th>
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody id="assignmentsTableBody">
-            <!-- Данные будут заполнены JavaScript -->
-          </tbody>
-        </table>
+        <!-- Assignments Table -->
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <table class="min-w-full">
+            <thead class="bg-gray-800">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wider">ФИО Бригадира</th>
+                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wider">Специализация</th>
+                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wider">Статус</th>
+                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wider">Рабочие дни</th>
+                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wider">Инициаторы</th>
+                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wider">Назначения</th>
+                <th class="px-6 py-4 text-left text-sm font-medium text-white uppercase tracking-wider">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="assignmentsTableBody" class="bg-white divide-y divide-gray-200">
+              <!-- Данные будут заполнены JavaScript -->
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- ВКЛАДКА ЗАЯВОК -->
       <div id="requestsTab" class="hidden">
-        <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
-          <div class="flex justify-between items-center p-4 border-b">
-            <h2 class="text-xl font-bold">Заявки</h2>
-            <button id="createRequestBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Заявки</h2>
+            <button id="createRequestBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
               Оформить заявку
             </button>
           </div>
@@ -94,15 +126,15 @@
             <table class="min-w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата/Время</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Адрес</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Специальность</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Проект</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата/Время</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Адрес</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Специальность</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Кол-во</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Проект</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
                 </tr>
               </thead>
-              <tbody id="requestsTableBody" class="divide-y divide-gray-200">
+              <tbody id="requestsTableBody" class="bg-white divide-y divide-gray-200">
                 <!-- Заявки будут здесь -->
               </tbody>
             </table>
@@ -111,27 +143,31 @@
       </div>
 
       <!-- Модальное окно назначения бригадира -->
-      <div id="assignmentModal" class="modal">
-        <div class="modal-content">
-          <h3 class="text-lg font-bold mb-4">Назначение бригадира</h3>
-          <form id="assignmentForm">
-            <div class="form-group">
-              <label for="id_brigadier" class="block text-sm font-medium mb-1">Бригадир:</label>
-              <select id="id_brigadier" name="brigadier" required class="form-control w-full">
-                <option value="">Выберите бригадира</option>
-              </select>
+      <div id="assignmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 modal-animation">
+          <div class="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 rounded-t-2xl">
+            <h3 class="text-lg font-bold">Назначение бригадира</h3>
+          </div>
+          <form id="assignmentForm" class="p-6">
+            <div class="space-y-4">
+              <div>
+                <label for="id_brigadier" class="block text-sm font-medium text-gray-700 mb-2">Бригадир:</label>
+                <select id="id_brigadier" name="brigadier" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Выберите бригадира</option>
+                </select>
+              </div>
+              <div>
+                <label for="id_start_date" class="block text-sm font-medium text-gray-700 mb-2">Дата начала:</label>
+                <input type="date" id="id_start_date" name="start_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              <div>
+                <label for="id_end_date" class="block text-sm font-medium text-gray-700 mb-2">Дата окончания:</label>
+                <input type="date" id="id_end_date" name="end_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
             </div>
-            <div class="form-group">
-              <label for="id_start_date" class="block text-sm font-medium mb-1">Дата начала:</label>
-              <input type="date" id="id_start_date" name="start_date" required class="form-control w-full" />
-            </div>
-            <div class="form-group">
-              <label for="id_end_date" class="block text-sm font-medium mb-1">Дата окончания:</label>
-              <input type="date" id="id_end_date" name="end_date" required class="form-control w-full" />
-            </div>
-            <div class="modal-actions">
-              <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Отмена</button>
-              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Назначить</button>
+            <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+              <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Отмена</button>
+              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Назначить</button>
             </div>
           </form>
         </div>
@@ -139,65 +175,65 @@
 
       <!-- Модальное окно для создания заявки -->
       <div id="requestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
-          <h3 class="text-lg font-bold mb-4">Оформление заявки</h3>
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4 modal-animation">
+          <div class="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 rounded-t-2xl">
+            <h3 class="text-lg font-bold">Оформление заявки</h3>
+          </div>
 
           <!-- Подсказка -->
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 m-6">
             <p class="text-sm text-blue-800">
               💡 <strong>Как работает:</strong> Сначала назначьте бригадиров во вкладке "Бригадиры", 
               затем они появятся здесь для выбранной даты. Система автоматически проверяет доступность.
             </p>
           </div>
 
-          <form id="requestForm" class="space-y-4">
+          <form id="requestForm" class="p-6 space-y-6">
             <!-- Основная информация -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium mb-1">Дата работ *</label>
-                <input type="date" name="date" required class="w-full border border-gray-300 rounded px-3 py-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Дата работ *</label>
+                <input type="date" name="date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Время начала *</label>
-                <input type="time" name="time" required class="w-full border border-gray-300 rounded px-3 py-2">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium mb-1">Продолжительность смены *</label>
-                <input type="text" name="duration" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="например, 8 часов">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Время начала *</label>
+                <input type="time" name="time" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Кол-во исполнителей *</label>
-                <input type="number" name="workersCount" required min="1" value="1" class="w-full border border-gray-300 rounded px-3 py-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Продолжительность смены *</label>
+                <input type="text" name="duration" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="например, 8 часов">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Кол-во исполнителей *</label>
+                <input type="number" name="workersCount" required min="1" value="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               </div>
             </div>
 
             <!-- Организационные данные -->
-            <div>
-              <label class="block text-sm font-medium mb-1">Адрес работ *</label>
-              <input type="text" name="address" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="ул. Тверская, д. 1">
-            </div>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Адрес работ *</label>
+                <input type="text" name="address" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="ул. Тверская, д. 1">
+              </div>
 
-            <div>
-              <label class="block text-sm font-medium mb-1">Бригадир/Контактное лицо *</label>
-              <select name="brigadier" required class="w-full border border-gray-300 rounded px-3 py-2" id="requestBrigadierSelect">
-                <option value="">Выберите бригадира</option>
-                <!-- Бригадиры будут заполнены через JavaScript -->
-              </select>
-            </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Бригадир/Контактное лицо *</label>
+                <select name="brigadier" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="requestBrigadierSelect">
+                  <option value="">Выберите бригадира</option>
+                </select>
+              </div>
 
-            <div>
-              <label class="block text-sm font-medium mb-1">Комментарий</label>
-              <textarea name="comment" rows="3" placeholder="ФИО желаемых исполнителей, детали работ, требования по одежде и т.д." class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Комментарий</label>
+                <textarea name="comment" rows="3" placeholder="ФИО желаемых исполнителей, детали работ, требования по одежде и т.д." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+              </div>
             </div>
 
             <!-- Рабочие параметры -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium mb-1">Специальность исполнителя *</label>
-                <select name="specialty" required class="w-full border border-gray-300 rounded px-3 py-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Специальность исполнителя *</label>
+                <select name="specialty" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   <option value="">Выберите специальность</option>
                   <option value="администраторы">Администраторы</option>
                   <option value="декораторы">Декораторы</option>
@@ -213,38 +249,36 @@
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Тип исполнителя *</label>
-                <select name="workerType" required class="w-full border border-gray-300 rounded px-3 py-2" id="workerTypeSelect">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Тип исполнителя *</label>
+                <select name="workerType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="workerTypeSelect">
                   <option value="">Выберите тип</option>
-                  <!-- Типы будут заполнены динамически -->
+                </select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Вид работ *</label>
+                <select name="workType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Выберите вид работ</option>
+                  <option value="высотные работы">Высотные работы</option>
+                  <option value="демонтажные работы">Демонтажные работы</option>
+                  <option value="монтажные работы">Монтажные работы</option>
+                  <option value="обработка удобрениями">Обработка удобрениями</option>
+                  <option value="погрузочно-разгрузочные работы">Погрузочно-разгрузочные работы</option>
+                  <option value="полив растений">Полив растений</option>
+                  <option value="посадка растений">Посадка растений</option>
+                  <option value="работы по уходу за растениями">Работы по уходу за растениями</option>
+                  <option value="разгрузка деревьев">Разгрузка деревьев</option>
+                  <option value="установка деревьев">Установка деревьев</option>
+                  <option value="установка заборов">Установка заборов</option>
+                  <option value="другое">Другое</option>
                 </select>
               </div>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium mb-1">Вид работ *</label>
-              <select name="workType" required class="w-full border border-gray-300 rounded px-3 py-2">
-                <option value="">Выберите вид работ</option>
-                <option value="высотные работы">Высотные работы</option>
-                <option value="демонтажные работы">Демонтажные работы</option>
-                <option value="монтажные работы">Монтажные работы</option>
-                <option value="обработка удобрениями">Обработка удобрениями</option>
-                <option value="погрузочно-разгрузочные работы">Погрузочно-разгрузочные работы</option>
-                <option value="полив растений">Полив растений</option>
-                <option value="посадка растений">Посадка растений</option>
-                <option value="работы по уходу за растениями">Работы по уходу за растениями</option>
-                <option value="разгрузка деревьев">Разгрузка деревьев</option>
-                <option value="установка деревьев">Установка деревьев</option>
-                <option value="установка заборов">Установка заборов</option>
-                <option value="другое">Другое</option>
-              </select>
-            </div>
-
             <!-- Финансовые атрибуты -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium mb-1">Проект *</label>
-                <select name="project" required class="w-full border border-gray-300 rounded px-3 py-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Проект *</label>
+                <select name="project" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   <option value="">Выберите проект</option>
                   <option value="Цветочный Джем25">Цветочный Джем25</option>
                   <option value="Летнее озеленение">Летнее озеленение</option>
@@ -252,8 +286,8 @@
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Назначение *</label>
-                <select name="assignment" required class="w-full border border-gray-300 rounded px-3 py-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Назначение *</label>
+                <select name="assignment" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   <option value="">Выберите назначение</option>
                   <option value="Застройка">Застройка</option>
                   <option value="Монтаж, демонтаж">Монтаж, демонтаж</option>
@@ -262,16 +296,15 @@
                   <option value="Орг расходы">Орг расходы</option>
                 </select>
               </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Компания-плательщик</label>
+                <input type="text" name="payerCompany" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" id="payerCompany" placeholder="Определяется автоматически">
+              </div>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium mb-1">Компания-плательщик</label>
-              <input type="text" name="payerCompany" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100" id="payerCompany" placeholder="Определяется автоматически">
-            </div>
-
-            <div class="flex justify-end space-x-2 pt-4 border-t">
-              <button type="button" id="cancelRequestBtn" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Отмена</button>
-              <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+            <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+              <button type="button" id="cancelRequestBtn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Отмена</button>
+              <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
                 Опубликовать заявку
               </button>
             </div>
@@ -282,7 +315,7 @@
 
     <!-- Кнопка для сброса данных -->
     <div class="text-center mt-8">
-      <button onclick="resetData()" class="btn bg-red-500 text-white hover:bg-red-600">
+      <button onclick="resetData()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
         Сбросить данные
       </button>
     </div>
