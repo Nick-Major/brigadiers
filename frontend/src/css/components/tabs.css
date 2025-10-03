@@ -1,0 +1,4 @@
+/* components/tabs.css - только для плавных переходов */
+.tab-btn {
+    transition: all 0.3s ease;
+}

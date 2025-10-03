@@ -1,19 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Brigadiers</title>
+    <title>Система управления персоналом</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/style.css">
   </head>
-  <body>
+  <body class="bg-gray-100">
     <div class="dashboard-container">
       <div class="dashboard-header">
-        <h2>Планирование бригадиров</h2>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Система управления персоналом</h1>
+        <p class="text-gray-600 mb-6">Планирование бригадиров и оформление заявок</p>
+        
+        <!-- Навигация по вкладкам -->
+        <div class="mb-6">
+            <div class="flex space-x-1 bg-gray-200 rounded-xl p-1">
+                <button id="tabBrigadiers" class="tab-btn bg-blue-500 text-white rounded-lg py-2 px-4 text-sm font-medium transition-colors">
+                    Бригадиры
+                </button>
+                <button id="tabRequests" class="tab-btn text-gray-700 hover:bg-gray-300 rounded-lg py-2 px-4 text-sm font-medium transition-colors">
+                    Заявки
+                </button>
+            </div>
+        </div>
 
+      <!-- ВКЛАДКА БРИГАДИРОВ -->
+      <div id="brigadiersTab">
         <div class="control-panel">
           <div class="view-controls">
             <div class="view-type-group">
-              <label>Тип просмотра</label>
+              <label class="text-sm font-medium mb-1">Тип просмотра</label>
               <select id="viewType" class="form-control">
                 <option value="single">Одна дата</option>
                 <option value="range">Период</option>
@@ -21,13 +38,13 @@
             </div>
 
             <div id="singleDateGroup" class="date-group">
-              <label>Дата</label>
+              <label class="text-sm font-medium mb-1">Дата</label>
               <input type="date" id="datePicker" class="form-control" />
             </div>
 
             <div id="dateRangeGroup" class="date-group" style="display: none">
-              <label>Период</label>
-              <div style="display: flex; gap: 10px; align-items: center">
+              <label class="text-sm font-medium mb-1">Период</label>
+              <div class="flex gap-2 items-center">
                 <input type="date" id="startDatePicker" class="form-control" />
                 <span>—</span>
                 <input type="date" id="endDatePicker" class="form-control" />
@@ -39,79 +56,158 @@
             Назначить бригадира
           </button>
         </div>
+
+        <div id="dashboardSummary" class="dashboard-summary">
+          <!-- Сводка будет заполнена JavaScript -->
+        </div>
+
+        <table class="assignments-table">
+          <thead>
+            <tr>
+              <th>ФИО Бригадира</th>
+              <th>Специализация</th>
+              <th>Статус</th>
+              <th>Рабочие дни</th>
+              <th>Инициаторы</th>
+              <th>Назначения</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="assignmentsTableBody">
+            <!-- Данные будут заполнены JavaScript -->
+          </tbody>
+        </table>
       </div>
 
-      <div id="dashboardSummary" class="dashboard-summary">
-        <!-- Сводка будет заполнена JavaScript -->
+      <!-- ВКЛАДКА ЗАЯВОК -->
+      <div id="requestsTab" class="hidden">
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+          <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold">Заявки</h2>
+            <button id="createRequestBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+              Оформить заявку
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата/Время</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Адрес</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Специальность</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                </tr>
+              </thead>
+              <tbody id="requestsTableBody" class="divide-y divide-gray-200">
+                <!-- Заявки будут здесь -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <table class="assignments-table">
-        <thead>
-          <tr>
-            <th>ФИО Бригадира</th>
-            <th>Специализация</th>
-            <th>Статус</th>
-            <th>Рабочие дни</th>
-            <th>Инициаторы</th>
-            <th>Назначения</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody id="assignmentsTableBody">
-          <!-- Данные будут заполнены JavaScript -->
-        </tbody>
-      </table>
-
-      <!-- Модальное окно назначения -->
+      <!-- Модальное окно назначения бригадира -->
       <div id="assignmentModal" class="modal">
         <div class="modal-content">
-          <h3>Назначение бригадира</h3>
+          <h3 class="text-lg font-bold mb-4">Назначение бригадира</h3>
           <form id="assignmentForm">
             <div class="form-group">
-              <label for="id_brigadier">Бригадир:</label>
-              <select
-                id="id_brigadier"
-                name="brigadier"
-                required
-                class="form-control"
-              >
+              <label for="id_brigadier" class="block text-sm font-medium mb-1">Бригадир:</label>
+              <select id="id_brigadier" name="brigadier" required class="form-control w-full">
                 <option value="">Выберите бригадира</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="id_start_date">Дата начала:</label>
-              <input
-                type="date"
-                id="id_start_date"
-                name="start_date"
-                required
-                class="form-control"
-              />
+              <label for="id_start_date" class="block text-sm font-medium mb-1">Дата начала:</label>
+              <input type="date" id="id_start_date" name="start_date" required class="form-control w-full" />
             </div>
             <div class="form-group">
-              <label for="id_end_date">Дата окончания:</label>
-              <input
-                type="date"
-                id="id_end_date"
-                name="end_date"
-                required
-                class="form-control"
-              />
+              <label for="id_end_date" class="block text-sm font-medium mb-1">Дата окончания:</label>
+              <input type="date" id="id_end_date" name="end_date" required class="form-control w-full" />
             </div>
             <div class="modal-actions">
-              <button type="button" onclick="closeModal()">Отмена</button>
-              <button type="submit">Назначить</button>
+              <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Отмена</button>
+              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Назначить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Модальное окно для создания заявки -->
+      <div id="requestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+          <h3 class="text-lg font-bold mb-4">Оформление заявки</h3>
+
+          <form id="requestForm" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Дата *</label>
+                <input type="date" name="date" required class="w-full border border-gray-300 rounded px-3 py-2">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Время *</label>
+                <input type="time" name="time" required class="w-full border border-gray-300 rounded px-3 py-2">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Адрес *</label>
+              <input type="text" name="address" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="ул. Тверская, д. 1">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Специальность *</label>
+                <select name="specialty" required class="w-full border border-gray-300 rounded px-3 py-2">
+                  <option value="">Выберите специальность</option>
+                  <option value="садовники">Садовники</option>
+                  <option value="декораторы">Декораторы</option>
+                  <option value="администраторы">Администраторы</option>
+                  <option value="помощник садовника">Помощник садовника</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Кол-во исполнителей *</label>
+                <input type="number" name="workersCount" required min="1" value="1" class="w-full border border-gray-300 rounded px-3 py-2">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Вид работ *</label>
+              <select name="workType" required class="w-full border border-gray-300 rounded px-3 py-2">
+                <option value="">Выберите вид работ</option>
+                <option value="монтажные работы">Монтажные работы</option>
+                <option value="демонтажные работы">Демонтажные работы</option>
+                <option value="полив растений">Полив растений</option>
+                <option value="посадка растений">Посадка растений</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Комментарий</label>
+              <textarea name="comment" rows="3" placeholder="Дополнительная информация..." class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-4">
+              <button type="button" id="cancelRequestBtn" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Отмена</button>
+              <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                Опубликовать заявку
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- Кнопка для сброса данных (для тестирования) -->
-    <div style="text-align: center; margin-top: 20px">
-      <button onclick="resetData()" class="btn" style="background: #e74c3c">
+    <!-- Кнопка для сброса данных -->
+    <div class="text-center mt-8">
+      <button onclick="resetData()" class="btn bg-red-500 text-white hover:bg-red-600">
         Сбросить данные
       </button>
     </div>
+
+    <script src="./js/bundle.js"></script>
   </body>
 </html>

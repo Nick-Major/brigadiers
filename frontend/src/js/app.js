@@ -1,5 +1,9 @@
 import { assignmentsAPI, brigadiersAPI } from './api.js';
 
+// Глобальные переменные для заявок
+let requests = JSON.parse(localStorage.getItem('requests')) || [];
+let currentView = 'brigadiers'; // 'brigadiers' | 'requests'
+
 // Глобальные переменные
 let availableBrigadiers = [];
 
@@ -11,6 +15,7 @@ async function initializeDashboard() {
     await loadBrigadiers();
     initializeDateControls();
     initializeModal();
+    initializeTabs();
     loadDashboardData();
     updateSummary([], getSelectedDateRange());
 }
@@ -142,6 +147,201 @@ function getSelectedDateRange() {
             endDate: document.getElementById('endDatePicker').value,
             viewType: 'range'
         };
+    }
+}
+
+// Инициализация вкладок
+function initializeTabs() {
+    const tabBrigadiers = document.getElementById('tabBrigadiers');
+    const tabRequests = document.getElementById('tabRequests');
+
+    if (tabBrigadiers && tabRequests) {
+        tabBrigadiers.addEventListener('click', () => switchTab('brigadiers'));
+        tabRequests.addEventListener('click', () => switchTab('requests'));
+    }
+
+    // Инициализация модального окна заявки
+    initializeRequestModal();
+    
+    // Загрузка данных заявок
+    loadRequestsData();
+}
+
+// Переключение вкладок
+function switchTab(tab) {
+    const brigadiersTab = document.getElementById('brigadiersTab');
+    const requestsTab = document.getElementById('requestsTab');
+    const tabBrigadiers = document.getElementById('tabBrigadiers');
+    const tabRequests = document.getElementById('tabRequests');
+    const dateControls = document.querySelector('.control-panel');
+
+    currentView = tab;
+
+    if (tab === 'brigadiers') {
+        brigadiersTab.classList.remove('hidden');
+        requestsTab.classList.add('hidden');
+        
+        // Активная вкладка - синяя
+        tabBrigadiers.classList.add('bg-blue-500', 'text-white');
+        tabBrigadiers.classList.remove('text-gray-700', 'hover:bg-gray-300');
+        
+        // Неактивная вкладка - серая
+        tabRequests.classList.remove('bg-blue-500', 'text-white');
+        tabRequests.classList.add('text-gray-700', 'hover:bg-gray-300');
+        
+        // Показываем контролы дат для бригадиров
+        if (dateControls) dateControls.style.display = 'flex';
+        
+    } else {
+        brigadiersTab.classList.add('hidden');
+        requestsTab.classList.remove('hidden');
+        
+        // Активная вкладка - синяя
+        tabRequests.classList.add('bg-blue-500', 'text-white');
+        tabRequests.classList.remove('text-gray-700', 'hover:bg-gray-300');
+        
+        // Неактивная вкладка - серая
+        tabBrigadiers.classList.remove('bg-blue-500', 'text-white');
+        tabBrigadiers.classList.add('text-gray-700', 'hover:bg-gray-300');
+        
+        // Скрываем контролы дат для заявок
+        if (dateControls) dateControls.style.display = 'none';
+        
+        loadRequestsData();
+    }
+}
+
+// Инициализация модального окна заявки
+function initializeRequestModal() {
+    const modal = document.getElementById('requestModal');
+    const cancelBtn = document.getElementById('cancelRequestBtn');
+    const createBtn = document.getElementById('createRequestBtn');
+
+    if (modal && cancelBtn) {
+        cancelBtn.addEventListener('click', closeRequestModal);
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeRequestModal();
+            }
+        });
+    }
+
+    if (createBtn) {
+        createBtn.addEventListener('click', openRequestModal);
+    }
+
+    const form = document.getElementById('requestForm');
+    if (form) {
+        form.addEventListener('submit', handleRequestSubmit);
+    }
+}
+
+// Открытие модального окна заявки
+function openRequestModal() {
+    const modal = document.getElementById('requestModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// Закрытие модального окна заявки
+function closeRequestModal() {
+    const modal = document.getElementById('requestModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+        
+        const form = document.getElementById('requestForm');
+        if (form) form.reset();
+    }
+}
+
+// Обработка отправки формы заявки
+function handleRequestSubmit(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const requestData = Object.fromEntries(formData.entries());
+    
+    // Добавляем заявку
+    addRequest(requestData);
+    
+    // Закрываем модальное окно
+    closeRequestModal();
+    
+    // Показываем уведомление
+    showNotification('Заявка успешно опубликована', 'success');
+}
+
+// Добавление заявки
+function addRequest(requestData) {
+    const newRequest = {
+        id: Date.now().toString(),
+        status: 'Опубликовано',
+        ...requestData,
+        createdAt: new Date().toISOString()
+    };
+    
+    requests.push(newRequest);
+    saveRequestsToStorage();
+    loadRequestsData();
+    
+    return newRequest;
+}
+
+// Сохранение заявок в localStorage
+function saveRequestsToStorage() {
+    localStorage.setItem('requests', JSON.stringify(requests));
+}
+
+// Загрузка данных заявок
+function loadRequestsData() {
+    try {
+        const tbody = document.getElementById('requestsTableBody');
+        if (!tbody) return;
+
+        // Загружаем актуальные данные из localStorage
+        requests = JSON.parse(localStorage.getItem('requests')) || [];
+
+        if (requests.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                        Нет созданных заявок. Нажмите "Оформить заявку" чтобы создать первую.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = requests.map(request => `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${request.date} ${request.time}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${request.address || 'Не указан'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${request.specialty || 'Не указана'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${request.workersCount || 1}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                        ${request.status}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading requests data:', error);
     }
 }
 
@@ -512,3 +712,7 @@ window.confirmAssignment = confirmAssignment;
 window.rejectAssignment = rejectAssignment;
 window.resetData = resetData;
 window.showBrigadierDetails = showBrigadierDetails;
+window.openRequestModal = openRequestModal;
+window.closeRequestModal = closeRequestModal;
+window.switchTab = switchTab;
+window.loadRequestsData = loadRequestsData;
