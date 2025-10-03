@@ -1,4 +1,4 @@
-import { assignmentsAPI, brigadiersAPI } from './api.js';
+import { assignmentsAPI, brigadiersAPI, availabilityAPI } from './api.js';
 
 // Глобальные переменные для заявок
 let requests = JSON.parse(localStorage.getItem('requests')) || [];
@@ -24,7 +24,8 @@ async function initializeDashboard() {
 async function loadBrigadiers() {
     try {
         const response = await brigadiersAPI.getBrigadiers();
-        availableBrigadiers = response.data;
+        console.log('Brigadiers response:', response); // ← ДЛЯ ДЕБАГА
+        availableBrigadiers = response.data || []; // ← ДОБАВЬТЕ ПРОВЕРКУ
         populateBrigadierSelect();
     } catch (error) {
         console.error('Error loading brigadiers:', error);
@@ -39,12 +40,100 @@ function populateBrigadierSelect() {
     // Очищаем существующие опции, кроме первой
     brigadierSelect.innerHTML = '<option value="">Выберите бригадира</option>';
     
-    availableBrigadiers.forEach(brigadier => {
-        const option = document.createElement('option');
-        option.value = brigadier.id;
-        option.textContent = `${brigadier.full_name} (${brigadier.specialization})`;
-        brigadierSelect.appendChild(option);
-    });
+    // Убедимся что availableBrigadiers - массив
+    if (Array.isArray(availableBrigadiers)) {
+        availableBrigadiers.forEach(brigadier => {
+            const option = document.createElement('option');
+            option.value = brigadier.id;
+            option.textContent = `${brigadier.full_name} (${brigadier.specialization})`;
+            brigadierSelect.appendChild(option);
+        });
+    }
+}
+
+// ДОБАВЬТЕ ЭТУ ФУНКЦИЮ (она отсутствует)
+function initializeWorkerTypeLogic() {
+    const specialtySelect = document.querySelector('select[name="specialty"]');
+    const workerTypeSelect = document.getElementById('workerTypeSelect');
+    
+    if (specialtySelect && workerTypeSelect) {
+        specialtySelect.addEventListener('change', function() {
+            const specialty = this.value;
+            workerTypeSelect.innerHTML = '<option value="">Выберите тип</option>';
+            
+            // Для демо просто покажем оба варианта
+            workerTypeSelect.innerHTML += `
+                <option value="наш сотрудник">Наш сотрудник</option>
+                <option value="от подрядчика">От подрядчика</option>
+            `;
+        });
+    }
+    
+    // Логика для автоматического определения компании-плательщика
+    const projectSelect = document.querySelector('select[name="project"]');
+    const assignmentSelect = document.querySelector('select[name="assignment"]');
+    const payerCompany = document.getElementById('payerCompany');
+    
+    if (projectSelect && assignmentSelect && payerCompany) {
+        const updatePayerCompany = () => {
+            const project = projectSelect.value;
+            const assignment = assignmentSelect.value;
+            
+            if (project && assignment) {
+                if (assignment === 'Застройка') {
+                    payerCompany.value = 'ЦЕХ/БС';
+                } else if (assignment === 'Уход') {
+                    payerCompany.value = 'УС';
+                } else if (assignment === 'Растения') {
+                    payerCompany.value = 'ЦО';
+                } else {
+                    payerCompany.value = 'ЦФ';
+                }
+            } else {
+                payerCompany.value = '';
+            }
+        };
+        
+        projectSelect.addEventListener('change', updatePayerCompany);
+        assignmentSelect.addEventListener('change', updatePayerCompany);
+    }
+}
+
+// Обновите populateRequestBrigadierSelect
+async function populateRequestBrigadierSelect(selectedDate) {
+    const select = document.getElementById('requestBrigadierSelect');
+    if (!select) return;
+
+    try {
+        select.innerHTML = '<option value="">Загрузка доступных бригадиров...</option>';
+        
+        const response = await availabilityAPI.getAvailableBrigadiers(selectedDate);
+        console.log('Available brigadiers response:', response); // ← ДЛЯ ДЕБАГА
+        
+        const availableBrigadiers = response.data || []; // ← ДОБАВЬТЕ ПРОВЕРКУ
+        
+        select.innerHTML = '<option value="">Выберите бригадира</option>';
+        
+        if (availableBrigadiers.length === 0) {
+            select.innerHTML += '<option value="" disabled>Нет доступных бригадиров на выбранную дату</option>';
+        } else {
+            // ДОБАВЬТЕ ПРОВЕРКУ НА МАССИВ
+            if (Array.isArray(availableBrigadiers)) {
+                availableBrigadiers.forEach(brigadier => {
+                    const option = document.createElement('option');
+                    option.value = brigadier.id;
+                    option.textContent = `${brigadier.full_name} (${brigadier.specialization})`;
+                    select.appendChild(option);
+                });
+            } else {
+                console.error('Available brigadiers is not array:', availableBrigadiers);
+                select.innerHTML = '<option value="">Ошибка формата данных</option>';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading available brigadiers:', error);
+        select.innerHTML = '<option value="">Ошибка загрузки бригадиров</option>';
+    }
 }
 
 function initializeDateControls() {
@@ -234,13 +323,40 @@ function initializeRequestModal() {
     const form = document.getElementById('requestForm');
     if (form) {
         form.addEventListener('submit', handleRequestSubmit);
+        
+        // Добавляем обработчик изменения даты - ОБНОВЛЯЕМ список бригадиров
+        const dateInput = form.querySelector('input[name="date"]');
+        if (dateInput) {
+            dateInput.addEventListener('change', function() {
+                if (this.value) {
+                    populateRequestBrigadierSelect(this.value);
+                }
+            });
+        }
     }
+    
+    // Инициализируем логику для типа исполнителя и компании-плательщика
+    initializeWorkerTypeLogic();
 }
 
 // Открытие модального окна заявки
 function openRequestModal() {
     const modal = document.getElementById('requestModal');
     if (modal) {
+        // Заполняем список доступных бригадиров на сегодня+1 (по умолчанию)
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const defaultDate = tomorrow.toISOString().split('T')[0];
+        
+        // Устанавливаем дату по умолчанию в форму
+        const dateInput = modal.querySelector('input[name="date"]');
+        if (dateInput) {
+            dateInput.value = defaultDate;
+        }
+        
+        // Используем новую функцию для заполнения списка бригадиров
+        populateRequestBrigadierSelect(defaultDate);
+        
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';

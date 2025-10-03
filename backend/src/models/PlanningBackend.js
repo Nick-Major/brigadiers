@@ -16,6 +16,7 @@ export class PlanningBackend {
         ];
         
         this.assignments = [];
+        this.requests = [];
         this.currentInitiator = this.initiators[0];
     }
 
@@ -103,12 +104,48 @@ export class PlanningBackend {
         });
     }
 
-    getAvailableBrigadiers() {
+    // ИЗМЕНИЛИ НАЗВАНИЕ: получаем ВСЕХ бригадиров (для назначения)
+    getAllBrigadiers() {
         return this.brigadiers;
     }
 
     resetData() {
         this.assignments = [];
         return true;
+    }
+
+    // Новый метод: получить ДОСТУПНЫХ бригадиров на конкретную дату (для заявок)
+    getAvailableBrigadiers(date) {
+        const assignedBrigadierIds = this.assignments
+            .filter(assignment => {
+                // Проверяем пересечение дат
+                const assignmentStart = new Date(assignment.start_date);
+                const assignmentEnd = new Date(assignment.end_date);
+                const targetDate = new Date(date);
+                
+                return targetDate >= assignmentStart && 
+                       targetDate <= assignmentEnd && 
+                       assignment.status === 'confirmed';
+            })
+            .map(assignment => assignment.brigadier_id);
+
+        return this.brigadiers.filter(brigadier => 
+            !assignedBrigadierIds.includes(brigadier.id)
+        );
+    }
+
+    // Новый метод: проверка доступности бригадира на дату
+    isBrigadierAvailable(brigadierId, date) {
+        const conflict = this.assignments.find(assignment => {
+            const assignmentStart = new Date(assignment.start_date);
+            const assignmentEnd = new Date(assignment.end_date);
+            const targetDate = new Date(date);
+            
+            return assignment.brigadier_id === parseInt(brigadierId) &&
+                   targetDate >= assignmentStart &&
+                   targetDate <= assignmentEnd &&
+                   assignment.status === 'confirmed';
+        });
+        return !conflict;
     }
 }
