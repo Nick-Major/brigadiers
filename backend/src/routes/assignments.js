@@ -1,9 +1,53 @@
 import express from 'express';
 const router = express.Router();
 
-// Хранилище назначений (в памяти)
-let assignments = [];
+// Хранилище назначений (в памяти) - делаем экспортируемым
+export let assignments = [];
+export let assignedBrigadiers = []; // Новое хранилище для назначенных бригадиров
 let nextAssignmentId = 1;
+
+// База данных всех бригадиров (должна быть синхронизирована с brigadiers.js)
+const allBrigadiers = [
+    { id: 1, full_name: "Иванов Иван Иванович", specialization: "садовники" },
+    { id: 2, full_name: "Петров Петр Петрович", specialization: "декораторы" },
+    { id: 3, full_name: "Сидоров Алексей Владимирович", specialization: "установщик деревьев" },
+    { id: 4, full_name: "Кузнецова Мария Сергеевна", specialization: "специалисты по озеленению" },
+    { id: 5, full_name: "Николаев Дмитрий Сергеевич", specialization: "старшие садовники" }
+];
+
+// Функция для обновления списка назначенных бригадиров
+function updateAssignedBrigadiers() {
+    assignedBrigadiers = [];
+    
+    assignments.forEach(assignment => {
+        if (assignment.status === 'confirmed') {
+            const brigadier = allBrigadiers.find(b => b.id === assignment.brigadier_id);
+            if (brigadier) {
+                // Добавляем бригадира для каждой даты в периоде
+                const startDate = new Date(assignment.start_date);
+                const endDate = new Date(assignment.end_date);
+                
+                for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+                    const dateString = date.toISOString().split('T')[0];
+                    assignedBrigadiers.push({
+                        date: dateString,
+                        brigadier_id: assignment.brigadier_id,
+                        full_name: brigadier.full_name,
+                        specialization: brigadier.specialization,
+                        assignment_id: assignment.id
+                    });
+                }
+            }
+        }
+    });
+    
+    console.log('📋 Обновлен список назначенных бригадиров:', assignedBrigadiers);
+}
+
+// Получить всех назначенных бригадиров на дату
+export function getAssignedBrigadiersForDate(date) {
+    return assignedBrigadiers.filter(item => item.date === date);
+}
 
 // Получить все назначения
 router.get('/', (req, res) => {
@@ -78,13 +122,16 @@ router.post('/', (req, res) => {
         brigadier_id: parseInt(brigadier_id),
         start_date,
         end_date,
-        status: 'requested',
+        status: 'requested', // По умолчанию "отправлен запрос"
         initiator_name,
         created_at: new Date().toISOString(),
         work_days: generateWorkDays(start_date, end_date)
     };
     
     assignments.push(newAssignment);
+    
+    // ОБНОВЛЯЕМ список назначенных бригадиров
+    updateAssignedBrigadiers();
     
     res.json({
         success: true,
@@ -108,6 +155,9 @@ router.patch('/:id/status', (req, res) => {
     
     assignment.status = status;
     
+    // ОБНОВЛЯЕМ список назначенных бригадиров при изменении статуса
+    updateAssignedBrigadiers();
+    
     res.json({
         success: true,
         data: assignment
@@ -117,6 +167,7 @@ router.patch('/:id/status', (req, res) => {
 // Сбросить данные (для демо)
 router.post('/reset', (req, res) => {
     assignments = [];
+    assignedBrigadiers = []; // Сбрасываем и назначенных бригадиров
     nextAssignmentId = 1;
     
     res.json({
@@ -141,25 +192,16 @@ function generateWorkDays(startDate, endDate) {
 
 // Вспомогательные функции для получения информации о бригадирах
 function getBrigadierName(brigadierId) {
-    const brigadiers = {
-        1: "Иванов Иван Иванович",
-        2: "Петров Петр Петрович",
-        3: "Сидоров Алексей Владимирович", 
-        4: "Кузнецова Мария Сергеевна",
-        5: "Николаев Дмитрий Сергеевич"
-    };
-    return brigadiers[brigadierId] || "Неизвестный бригадир";
+    const brigadier = allBrigadiers.find(b => b.id === brigadierId);
+    return brigadier ? brigadier.full_name : "Неизвестный бригадир";
 }
 
 function getBrigadierSpecialization(brigadierId) {
-    const specializations = {
-        1: "садовники",
-        2: "декораторы",
-        3: "установщик деревьев", 
-        4: "специалисты по озеленению",
-        5: "старшие садовники"
-    };
-    return specializations[brigadierId] || "Общие работы";
+    const brigadier = allBrigadiers.find(b => b.id === brigadierId);
+    return brigadier ? brigadier.specialization : "Общие работы";
 }
+
+// Инициализируем список при запуске
+updateAssignedBrigadiers();
 
 export { router as assignmentsRouter };

@@ -64,23 +64,39 @@ export function populateBrigadierSelect() {
 
 // Заполнение списка бригадиров для заявок (только доступные на выбранную дату)
 export async function populateRequestBrigadierSelect(selectedDate) {
+    console.log('🎯 populateRequestBrigadierSelect CALLED with date:', selectedDate);
+    
     const select = document.getElementById('requestBrigadierSelect');
-    if (!select) return;
+    console.log('🔍 Looking for select element...');
+    
+    if (!select) {
+        console.error('❌ select element with id "requestBrigadierSelect" not found!');
+        console.log('📋 Available elements with "request" in id:');
+        // Поиск всех элементов с request в id для отладки
+        const allElements = document.querySelectorAll('[id*="request"]');
+        allElements.forEach(el => console.log(' -', el.id));
+        return;
+    }
+
+    console.log('✅ Select element found:', select);
 
     try {
         select.innerHTML = '<option value="">Загрузка доступных бригадиров...</option>';
+        console.log('📡 Making API call to /availability/available-brigadiers/' + selectedDate);
         
         const response = await availabilityAPI.getAvailableBrigadiers(selectedDate);
-        console.log('Available brigadiers response:', response);
+        console.log('✅ API response received:', response);
         
         let availableBrigadiers = response.data.data || [];
         
-        console.log('Final availableBrigadiers for date:', selectedDate, availableBrigadiers);
+        console.log('👥 Available brigadiers count:', availableBrigadiers.length);
+        console.log('👥 Available brigadiers:', availableBrigadiers);
         
         select.innerHTML = '<option value="">Выберите бригадира</option>';
         
         if (availableBrigadiers.length === 0) {
             select.innerHTML += '<option value="" disabled>Нет доступных бригадиров на выбранную дату</option>';
+            console.log('⚠️ No available brigadiers for date:', selectedDate);
             showNotification('На выбранную дату нет доступных бригадиров. Сначала назначьте бригадиров во вкладке "Бригадиры".', 'warning');
         } else {
             availableBrigadiers.forEach(brigadier => {
@@ -89,9 +105,11 @@ export async function populateRequestBrigadierSelect(selectedDate) {
                 option.textContent = `${brigadier.full_name} (${brigadier.specialization})`;
                 select.appendChild(option);
             });
+            console.log('✅ Select populated with', availableBrigadiers.length, 'brigadiers');
         }
     } catch (error) {
-        console.error('Error loading available brigadiers:', error);
+        console.error('❌ Error loading available brigadiers:', error);
+        console.error('❌ Error details:', error.response?.data || error.message);
         select.innerHTML = '<option value="">Ошибка загрузки бригадиров</option>';
         showNotification('Ошибка загрузки списка доступных бригадиров', 'error');
     }

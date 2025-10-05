@@ -95,4 +95,18 @@ router.get('/work-types', (req, res) => {
     });
 });
 
+// Получить доступных бригадиров на конкретную дату
+router.get('/available/:date', (req, res) => {
+    const { date } = req.params;
+    
+    // Здесь должна быть логика проверки назначений
+    // Пока возвращаем всех активных бригадиров
+    const availableBrigadiers = brigadiers.filter(b => b.is_active);
+    
+    res.json({
+        success: true,
+        data: availableBrigadiers
+    });
+});
+
 export { router as brigadiersRouter };

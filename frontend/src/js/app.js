@@ -3,7 +3,7 @@ import { assignmentsAPI, brigadiersAPI, availabilityAPI } from './modules/api.js
 import { initializeUI, switchTab } from './modules/ui.js';
 import { loadBrigadiers, availableBrigadiers, getBrigadierById } from './modules/brigadiers.js';
 import { initializeAssignmentModal, openAssignmentModal, closeModal, handleFormSubmit } from './modules/modal.js';
-import { initializeRequestModal, openRequestModal, closeRequestModal, loadRequestsData } from './modules/requests.js';
+import { initializeRequestModal, openRequestModal, closeRequestModal, loadRequestsData, resetRequestsData } from './modules/requests.js';
 import { loadDashboardData, confirmAssignment, rejectAssignment, resetData, showBrigadierDetails } from './modules/assignments.js';
 import { showNotification } from './modules/notifications.js';
 
@@ -39,3 +39,4 @@ window.openRequestModal = openRequestModal;
 window.closeRequestModal = closeRequestModal;
 window.switchTab = switchTab;
 window.loadRequestsData = loadRequestsData;
+window.resetRequestsData = resetRequestsData;

@@ -7,45 +7,103 @@ export let requests = JSON.parse(localStorage.getItem('requests')) || [];
 
 // Инициализация модального окна заявки
 export function initializeRequestModal() {
+    console.log('🔄 initializeRequestModal called');
+    
     const modal = document.getElementById('requestModal');
     const cancelBtn = document.getElementById('cancelRequestBtn');
     const createBtn = document.getElementById('createRequestBtn');
 
+    console.log('🔍 Modal element:', modal);
+    console.log('🔍 Cancel button:', cancelBtn);
+    console.log('🔍 Create button:', createBtn);
+
     if (modal && cancelBtn) {
-        cancelBtn.addEventListener('click', closeRequestModal);
+        console.log('✅ Adding event listeners for modal and cancel button');
+        cancelBtn.addEventListener('click', () => {
+            console.log('❌ Cancel button clicked');
+            closeRequestModal();
+        });
         
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
+                console.log('🎯 Modal background clicked');
                 closeRequestModal();
             }
         });
+    } else {
+        console.error('❌ Modal or cancel button not found!');
     }
 
     if (createBtn) {
-        createBtn.addEventListener('click', openRequestModal);
+        console.log('✅ Adding click listener to create button');
+        createBtn.addEventListener('click', () => {
+            console.log('🎯 Create request button clicked - opening modal');
+            openRequestModal();
+        });
+    } else {
+        console.error('❌ Create button not found!');
     }
 
     const form = document.getElementById('requestForm');
+    console.log('🔍 Request form:', form);
+    
     if (form) {
-        form.addEventListener('submit', handleRequestSubmit);
+        console.log('✅ Adding submit listener to form');
+        form.addEventListener('submit', (e) => {
+            console.log('📤 Form submit triggered');
+            handleRequestSubmit(e);
+        });
         
         // Добавляем обработчик изменения даты
         const dateInput = form.querySelector('input[name="date"]');
+        console.log('🔍 Date input:', dateInput);
+        
         if (dateInput) {
+            console.log('✅ Adding change listener to date input');
             dateInput.addEventListener('change', function() {
+                console.log('📅 Date input changed to:', this.value);
                 if (this.value) {
+                    console.log('🔄 Calling populateRequestBrigadierSelect with date:', this.value);
                     populateRequestBrigadierSelect(this.value);
+                } else {
+                    console.log('⚠️ Date input is empty');
                 }
             });
+            
+            // Проверим начальное значение даты
+            console.log('📅 Initial date input value:', dateInput.value);
+        } else {
+            console.error('❌ Date input not found in request form!');
+            // Поищем все input элементы в форме для отладки
+            const allInputs = form.querySelectorAll('input');
+            console.log('📋 All inputs in form:');
+            allInputs.forEach(input => console.log(' -', input.name, ':', input.value));
         }
+        
+        // Проверим наличие select для бригадиров
+        const brigadierSelect = form.querySelector('#requestBrigadierSelect');
+        console.log('🔍 Brigadier select:', brigadierSelect);
+        if (!brigadierSelect) {
+            console.error('❌ Brigadier select (#requestBrigadierSelect) not found in form!');
+            // Поищем все select элементы в форме
+            const allSelects = form.querySelectorAll('select');
+            console.log('📋 All selects in form:');
+            allSelects.forEach(select => console.log(' -', select.id || select.name, ':', select.innerHTML));
+        }
+    } else {
+        console.error('❌ Request form not found!');
     }
     
     // Инициализируем логику для типа исполнителя и компании-плательщика
+    console.log('🔄 Initializing worker type logic...');
     initializeWorkerTypeLogic();
+    console.log('✅ initializeRequestModal completed');
 }
 
 // Открытие модального окна заявки
 export function openRequestModal() {
+    console.log('🔓 openRequestModal called');
+    
     const modal = document.getElementById('requestModal');
     if (modal) {
         // Заполняем список доступных бригадиров на сегодня+1 (по умолчанию)
@@ -53,18 +111,26 @@ export function openRequestModal() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const defaultDate = tomorrow.toISOString().split('T')[0];
         
+        console.log('📅 Default date for request:', defaultDate);
+        
         // Устанавливаем дату по умолчанию в форму
         const dateInput = modal.querySelector('input[name="date"]');
         if (dateInput) {
             dateInput.value = defaultDate;
+            console.log('✅ Date input set to:', defaultDate);
         }
         
         // Используем новую функцию для заполнения списка бригадиров
+        console.log('🔄 Calling populateRequestBrigadierSelect...');
         populateRequestBrigadierSelect(defaultDate);
         
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
+        
+        console.log('✅ Request modal opened');
+    } else {
+        console.error('❌ Request modal element not found!');
     }
 }
 
@@ -248,5 +314,16 @@ function initializeWorkerTypeLogic() {
         
         projectSelect.addEventListener('change', updatePayerCompany);
         assignmentSelect.addEventListener('change', updatePayerCompany);
+    }
+}
+
+// Сброс данных заявок (для демо)
+export function resetRequestsData() {
+    if (confirm('Вы уверены что хотите сбросить ВСЕ заявки? Это действие нельзя отменить.')) {
+        requests = [];
+        saveRequestsToStorage();
+        loadRequestsData();
+        showNotification('Все заявки сброшены', 'success');
+        console.log('🗑️ Все заявки сброшены');
     }
 }

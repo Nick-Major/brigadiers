@@ -39,7 +39,7 @@ export const brigadiersAPI = {
 
 export const availabilityAPI = {
     getAvailableBrigadiers: (date) => 
-        api.get(`/availability/available-brigadiers/${date}`)
+        api.get(`/availability/available-brigadiers/${date}`)  // Исправленный путь
 };
 
 export default api;

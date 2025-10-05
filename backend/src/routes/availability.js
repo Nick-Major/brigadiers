@@ -1,23 +1,38 @@
 import express from 'express';
+import { getAssignedBrigadiersForDate } from './assignments.js';
+
 const router = express.Router();
 
-// Получить доступных бригадиров на конкретную дату
+// Получить доступных бригадиров на дату (только назначенные и подтвержденные)
 router.get('/available-brigadiers/:date', (req, res) => {
-  const { date } = req.params;
-  
-  // Для демо возвращаем всех бригадиров
-  // В реальном приложении здесь должна быть логика проверки занятости
-  const availableBrigadiers = [
-    { id: 1, full_name: "Иванов Иван Иванович", specialization: "Строительные работы" },
-    { id: 2, full_name: "Петров Петр Петрович", specialization: "Отделочные работы" },
-    { id: 3, full_name: "Сидоров Алексей Владимирович", specialization: "Электромонтажные работы" },
-    { id: 4, full_name: "Кузнецова Мария Сергеевна", specialization: "Отделочные работы" }
-  ];
-  
-  res.json({
-    success: true,
-    data: availableBrigadiers
-  });
+    const { date } = req.params;
+    console.log(`📅 Запрос доступных бригадиров на дату: ${date}`);
+    
+    // Получаем назначенных бригадиров на эту дату
+    const assignedBrigadiers = getAssignedBrigadiersForDate(date);
+    console.log(`👥 Назначенные бригадиры на ${date}:`, assignedBrigadiers);
+    
+    // Преобразуем в формат для фронтенда (убираем дубликаты по ID)
+    const uniqueBrigadiers = [];
+    const seenIds = new Set();
+    
+    assignedBrigadiers.forEach(item => {
+        if (!seenIds.has(item.brigadier_id)) {
+            seenIds.add(item.brigadier_id);
+            uniqueBrigadiers.push({
+                id: item.brigadier_id,
+                full_name: item.full_name,
+                specialization: item.specialization
+            });
+        }
+    });
+    
+    console.log(`✅ Доступные бригадиры на ${date}:`, uniqueBrigadiers.map(b => b.full_name));
+    
+    res.json({
+        success: true,
+        data: uniqueBrigadiers
+    });
 });
 
 export { router as availabilityRouter };
