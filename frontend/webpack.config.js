@@ -6,7 +6,8 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.[contenthash].js',
-    clean: true
+    clean: true,
+    publicPath: 'auto'
   },
   module: {
     rules: [
@@ -26,20 +27,24 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './src/index.html',
-      minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeRedundantAttributes: true
-      }
+      filename: 'index.html',
+      inject: true
     })
   ],
   devServer: {
-    static: './dist',
+    static: {
+      directory: path.join(__dirname, 'dist'),
+      publicPath: '/',
+      watch: true
+    },
     port: 3000,
     open: true,
-    hot: true
+    hot: true,
+    compress: true,
+    historyApiFallback: true
   },
   resolve: {
     extensions: ['.js']
-  }
+  },
+  mode: 'development'
 };

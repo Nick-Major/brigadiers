@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Система управления персоналом</title>
-    <link rel="stylesheet" href="./css/style.css">
+    <!-- <link rel="stylesheet" href="./css/style.css"> -->
   </head>
   <body>
     <div class="container">
@@ -92,31 +92,52 @@
 
       <!-- ВКЛАДКА ЗАЯВОК -->
       <div id="requestsTab" class="hidden">
-        <div class="card table-card">
-          <div class="table-header">
-            <h2 class="table-title">Заявки</h2>
-            <button id="createRequestBtn" class="btn btn-primary">
-              Оформить заявку
-            </button>
-          </div>
+          <div class="card table-card">
+              <div class="table-header">
+                  <div class="request-filters">
+                      <div class="filter-group">
+                          <label class="form-label">Показать:</label>
+                          <select id="requestFilter" class="form-select">
+                              <option value="my">Ваши заявки</option>
+                              <option value="all">Все заявки</option>
+                          </select>
+                      </div>
+                      <div class="filter-group">
+                          <label class="form-label">Поиск:</label>
+                          <input type="text" id="requestSearch" class="form-input" placeholder="Поиск по адресу или бригадиру...">
+                      </div>
+                  </div>
+                  <button id="createRequestBtn" class="btn btn-primary">
+                      Оформить заявку
+                  </button>
+              </div>
 
-          <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Дата/Время</th>
-                  <th>Адрес</th>
-                  <th>Специальность</th>
-                  <th>Кол-во</th>
-                  <th>Статус</th>
-                </tr>
-              </thead>
-              <tbody id="requestsTableBody">
-                <!-- Заявки будут здесь -->
-              </tbody>
-            </table>
+              <div class="table-container">
+                  <table class="table">
+                      <thead>
+                          <tr>
+                              <th>Дата</th>
+                              <th>Время</th>
+                              <th>Адрес</th>
+                              <th>Бригадир</th>
+                              <th>Специальность</th>
+                              <th>Кол-во</th>
+                              <th>Тип</th>
+                              <th>Вид работ</th>
+                              <th>Продолжительность</th>
+                              <th>Комментарий</th>
+                              <th>Проект</th>
+                              <th>Назначение</th>
+                              <th>Компания</th>
+                              <th>Статус</th>
+                          </tr>
+                      </thead>
+                      <tbody id="requestsTableBody">
+                          <!-- Заявки будут здесь -->
+                      </tbody>
+                  </table>
+              </div>
           </div>
-        </div>
       </div>
 
       <!-- Модальное окно назначения бригадира -->
@@ -307,6 +328,6 @@
       </button>
     </div>
 
-    <script src="./js/bundle.js"></script>
+    <!-- <script src="./js/bundle.js"></script> -->
   </body>
 </html>

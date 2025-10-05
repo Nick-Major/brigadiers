@@ -37,15 +37,9 @@ export const brigadiersAPI = {
         api.get('/brigadiers')
 };
 
-// Убедитесь что availabilityAPI правильный:
 export const availabilityAPI = {
     getAvailableBrigadiers: (date) => 
-        api.get(`/availability/available-brigadiers/${date}`),
-    
-    checkBrigadierAvailability: (brigadierId, date) => 
-        api.get('/availability/check-brigadier-availability', {
-            params: { brigadierId, date }
-        })
+        api.get(`/availability/available-brigadiers/${date}`)
 };
 
 export default api;

@@ -10,12 +10,23 @@ export async function loadDashboardData() {
     
     try {
         const response = await assignmentsAPI.getAssignments(dateRange);
-        const assignments = response.data;
+        console.log('📦 Assignments API response:', response);
+        
+        // ИСПРАВЛЕНИЕ: Правильно обрабатываем структуру ответа
+        const assignments = response.data && response.data.success ? 
+                           (Array.isArray(response.data.data) ? response.data.data : []) : [];
+        
+        console.log('✅ Processed assignments:', assignments);
+        
         updateAssignmentsTable(assignments, dateRange);
         updateSummary(assignments, dateRange);
     } catch (error) {
         console.error('Error loading data:', error);
         showNotification('Ошибка загрузки данных', 'error');
+        
+        // Показываем пустую таблицу при ошибке
+        updateAssignmentsTable([], dateRange);
+        updateSummary([], dateRange);
     } finally {
         hideLoadingState();
     }
@@ -25,6 +36,11 @@ export async function loadDashboardData() {
 export function updateAssignmentsTable(assignments, dateRange) {
     const tbody = document.getElementById('assignmentsTableBody');
     if (!tbody) return;
+
+    // Убеждаемся что assignments - массив
+    if (!Array.isArray(assignments)) {
+        assignments = [];
+    }
 
     if (assignments.length === 0) {
         tbody.innerHTML = `
@@ -83,7 +99,19 @@ export function updateAssignmentsTable(assignments, dateRange) {
 function groupAssignmentsByBrigadier(assignments, dateRange) {
     const grouped = {};
     
+    // Убеждаемся что assignments - массив
+    if (!Array.isArray(assignments)) {
+        console.warn('Assignments is not an array:', assignments);
+        return {};
+    }
+    
     assignments.forEach(assignment => {
+        // ИСПРАВЛЕНИЕ: Проверяем структуру assignment
+        if (!assignment || !assignment.brigadier) {
+            console.warn('Invalid assignment structure:', assignment);
+            return;
+        }
+        
         const brigadierId = assignment.brigadier.id;
         
         if (!grouped[brigadierId]) {
@@ -100,15 +128,24 @@ function groupAssignmentsByBrigadier(assignments, dateRange) {
         
         const brigadier = grouped[brigadierId];
         brigadier.assignments.push(assignment);
-        brigadier.initiators.add(assignment.initiator.full_name);
         
-        assignment.work_days.forEach(day => {
-            if (day >= dateRange.startDate && day <= dateRange.endDate) {
-                brigadier.workDays.add(day);
-            }
-        });
+        // ИСПРАВЛЕНИЕ: Проверяем наличие initiator
+        if (assignment.initiator && assignment.initiator.full_name) {
+            brigadier.initiators.add(assignment.initiator.full_name);
+        }
         
-        brigadier.statuses.add(assignment.status);
+        // Убеждаемся что work_days - массив
+        if (Array.isArray(assignment.work_days)) {
+            assignment.work_days.forEach(day => {
+                if (day >= dateRange.startDate && day <= dateRange.endDate) {
+                    brigadier.workDays.add(day);
+                }
+            });
+        }
+        
+        if (assignment.status) {
+            brigadier.statuses.add(assignment.status);
+        }
     });
     
     Object.values(grouped).forEach(brigadier => {
@@ -120,7 +157,7 @@ function groupAssignmentsByBrigadier(assignments, dateRange) {
     return grouped;
 }
 
-// Вспомогательные функции для рендеринга
+// Остальные функции остаются без изменений...
 function calculateOverallStatus(statuses) {
     if (statuses.includes('rejected')) return 'rejected';
     if (statuses.includes('requested')) return 'requested';
@@ -154,6 +191,7 @@ function renderWorkDaysCalendar(workDays, dateRange) {
 }
 
 function renderInitiatorsList(initiators) {
+    if (initiators.length === 0) return '<span>Нет данных</span>';
     if (initiators.length === 1) {
         return `<span>${initiators[0]}</span>`;
     }
@@ -169,6 +207,8 @@ function renderInitiatorsList(initiators) {
 }
 
 function renderAssignmentsSummary(assignments) {
+    if (assignments.length === 0) return '<span>Нет назначений</span>';
+    
     const periods = assignments.map(a => 
         a.start_date === a.end_date ? 
         formatDate(a.start_date) : 
@@ -189,12 +229,21 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('ru-RU');
 }
 
+function getStatusText(status) {
+    const statusMap = {
+        'requested': 'Отправлен запрос на выход в смену',
+        'confirmed': 'Выход подтвержден',
+        'rejected': 'Отказ'
+    };
+    return statusMap[status] || status;
+}
+
 // Обновление сводки
 export function updateSummary(assignments, dateRange) {
     const summaryElement = document.getElementById('dashboardSummary');
     if (!summaryElement) return;
     
-    const uniqueBrigadiers = new Set(assignments.map(a => a.brigadier.id)).size;
+    const uniqueBrigadiers = new Set(assignments.map(a => a.brigadier?.id)).size;
     const totalAssignments = assignments.length;
     const confirmedCount = assignments.filter(a => a.status === 'confirmed').length;
     
@@ -216,15 +265,6 @@ export function updateSummary(assignments, dateRange) {
             <div class="summary-label">Период</div>
         </div>
     `;
-}
-
-function getStatusText(status) {
-    const statusMap = {
-        'requested': 'Отправлен запрос',
-        'confirmed': 'Выход подтвержден',
-        'rejected': 'Отказ'
-    };
-    return statusMap[status] || status;
 }
 
 // Функции для интерактивности
@@ -263,6 +303,6 @@ export async function resetData() {
 export function showBrigadierDetails(brigadierId) {
     const brigadier = getBrigadierById(brigadierId);
     if (brigadier) {
-        alert(`Детали бригадира:\n\nФИО: ${brigadier.full_name}\nСпециализация: ${brigadier.specialization}\nID: ${brigadier.id}`);
+        alert(`Детали бригадира:\n\nФИО: ${brigadier.full_name}\nСпециализация: ${brigadier.specialization}\nРоль: ${brigadier.role}\nID: ${brigadier.id}`);
     }
 }

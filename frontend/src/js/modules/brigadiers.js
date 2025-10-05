@@ -18,15 +18,17 @@ export async function loadBrigadiers() {
     } catch (error) {
         console.error('❌ Error loading brigadiers:', error);
         availableBrigadiers = [
-            { id: 1, full_name: "Иванов Иван Иванович", specialization: "Строительные работы" },
-            { id: 2, full_name: "Петров Петр Петрович", specialization: "Отделочные работы" }
+            { id: 1, full_name: "Иванов Иван Иванович", specialization: "Администратор" },
+            { id: 2, full_name: "Петров Петр Петрович", specialization: "Администратор" },
+            { id: 3, full_name: "Сидоров Алексей Владимирович", specialization: "Администратор" },
+            { id: 4, full_name: "Кузнецова Мария Сергеевна", specialization: "Специалист по озеленению" }
         ];
         populateBrigadierSelect();
         showNotification('Ошибка загрузки списка бригадиров', 'error');
     }
 }
 
-// Заполнение выпадающего списка бригадиров
+// Заполнение выпадающего списка бригадиров для назначения
 export function populateBrigadierSelect() {
     console.log('🎯 populateBrigadierSelect CALLED');
     
@@ -60,7 +62,7 @@ export function populateBrigadierSelect() {
     }
 }
 
-// Заполнение списка бригадиров для заявок
+// Заполнение списка бригадиров для заявок (только доступные на выбранную дату)
 export async function populateRequestBrigadierSelect(selectedDate) {
     const select = document.getElementById('requestBrigadierSelect');
     if (!select) return;
@@ -69,24 +71,17 @@ export async function populateRequestBrigadierSelect(selectedDate) {
         select.innerHTML = '<option value="">Загрузка доступных бригадиров...</option>';
         
         const response = await availabilityAPI.getAvailableBrigadiers(selectedDate);
-        console.log('Full response:', response);
+        console.log('Available brigadiers response:', response);
         
-        let availableBrigadiers = [];
+        let availableBrigadiers = response.data.data || [];
         
-        if (Array.isArray(response.data)) {
-            availableBrigadiers = response.data;
-        } else if (Array.isArray(response.data?.data)) {
-            availableBrigadiers = response.data.data;
-        } else if (Array.isArray(response.data?.brigadiers)) {
-            availableBrigadiers = response.data.brigadiers;
-        }
-        
-        console.log('Final availableBrigadiers:', availableBrigadiers);
+        console.log('Final availableBrigadiers for date:', selectedDate, availableBrigadiers);
         
         select.innerHTML = '<option value="">Выберите бригадира</option>';
         
         if (availableBrigadiers.length === 0) {
             select.innerHTML += '<option value="" disabled>Нет доступных бригадиров на выбранную дату</option>';
+            showNotification('На выбранную дату нет доступных бригадиров. Сначала назначьте бригадиров во вкладке "Бригадиры".', 'warning');
         } else {
             availableBrigadiers.forEach(brigadier => {
                 const option = document.createElement('option');
@@ -98,12 +93,7 @@ export async function populateRequestBrigadierSelect(selectedDate) {
     } catch (error) {
         console.error('Error loading available brigadiers:', error);
         select.innerHTML = '<option value="">Ошибка загрузки бригадиров</option>';
-        
-        // Демо-данные на случай ошибки
-        select.innerHTML += `
-            <option value="1">Иванов Иван (Строительные работы)</option>
-            <option value="2">Петров Петр (Отделочные работы)</option>
-        `;
+        showNotification('Ошибка загрузки списка доступных бригадиров', 'error');
     }
 }
 

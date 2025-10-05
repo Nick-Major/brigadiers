@@ -1,29 +1,23 @@
 import express from 'express';
-import { PlanningBackend } from '../models/PlanningBackend.js';
-
 const router = express.Router();
-const planningBackend = new PlanningBackend();
 
-// Получить доступных бригадиров на дату (для заявок)
+// Получить доступных бригадиров на конкретную дату
 router.get('/available-brigadiers/:date', (req, res) => {
-    try {
-        const { date } = req.params;
-        const availableBrigadiers = planningBackend.getAvailableBrigadiers(date);
-        res.json({ data: availableBrigadiers });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+  const { date } = req.params;
+  
+  // Для демо возвращаем всех бригадиров
+  // В реальном приложении здесь должна быть логика проверки занятости
+  const availableBrigadiers = [
+    { id: 1, full_name: "Иванов Иван Иванович", specialization: "Строительные работы" },
+    { id: 2, full_name: "Петров Петр Петрович", specialization: "Отделочные работы" },
+    { id: 3, full_name: "Сидоров Алексей Владимирович", specialization: "Электромонтажные работы" },
+    { id: 4, full_name: "Кузнецова Мария Сергеевна", specialization: "Отделочные работы" }
+  ];
+  
+  res.json({
+    success: true,
+    data: availableBrigadiers
+  });
 });
 
-// Проверить доступность бригадира
-router.get('/check-brigadier-availability', (req, res) => {
-    try {
-        const { brigadierId, date } = req.query;
-        const isAvailable = planningBackend.isBrigadierAvailable(brigadierId, date);
-        res.json({ available: isAvailable });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-export default router;
+export { router as availabilityRouter };

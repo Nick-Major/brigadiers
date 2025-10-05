@@ -8,6 +8,29 @@ export let currentView = 'brigadiers';
 export function initializeUI() {
     initializeDateControls();
     initializeTabs();
+    initializeRequestFilters();
+}
+
+// Инициализация фильтров заявок
+export function initializeRequestFilters() {
+    const requestFilter = document.getElementById('requestFilter');
+    const requestSearch = document.getElementById('requestSearch');
+    
+    if (requestFilter) {
+        requestFilter.addEventListener('change', loadRequestsData);
+    }
+    
+    if (requestSearch) {
+        requestSearch.addEventListener('input', loadRequestsData);
+    }
+}
+
+// Получить текущие настройки фильтра заявок
+export function getRequestFilterSettings() {
+    return {
+        filter: document.getElementById('requestFilter')?.value || 'my',
+        search: document.getElementById('requestSearch')?.value || ''
+    };
 }
 
 // Инициализация контролов даты
